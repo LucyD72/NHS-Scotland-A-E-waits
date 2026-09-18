@@ -29,14 +29,32 @@ jobs:
       - name: Download latest PHS data
         run: python update_ae_data.py
 
+      - name: Check whether data changed
+        id: data-changes
+        run: |
+          if git diff --quiet -- ae_waiting_times.csv; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No new A&E data."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "A&E data has changed."
+          fi
+
       - name: Commit updated CSV
+        if: steps.data-changes.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ae_waiting_times.csv
-          if git diff --cached --quiet; then
-            echo "No new data to commit."
-          else
-            git commit -m "Update NHS Scotland A&E data"
-            git push
-          fi
+          git commit -m "Update NHS Scotland A&E data"
+          git push
+
+      - name: Republish Datawrapper chart
+        if: steps.data-changes.outputs.changed == 'true'
+        env:
+          DATAWRAPPER_API_TOKEN: ${{ secrets.DATAWRAPPER_API_TOKEN }}
+        run: |
+          curl --fail-with-body \
+            --request POST \
+            --url "https://api.datawrapper.de/v3/charts/eyGvs/publish" \
+            --header "Authorization: Bearer $DATAWRAPPER_API_TOKEN"
