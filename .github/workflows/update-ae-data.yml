@@ -59,6 +59,26 @@ jobs:
             --url "https://api.datawrapper.de/v3/charts/eyGvs/publish" \
             --header "Authorization: Bearer $DATAWRAPPER_API_TOKEN"
 
+      - name: Get latest A&E figure
+        if: steps.data-changes.outputs.changed == 'true'
+        id: latest-data
+        run: |
+          python - <<'PY'
+          import os
+          import pandas as pd
+
+          df = pd.read_csv("ae_waiting_times.csv")
+          latest = df.iloc[-1]
+
+          date = pd.to_datetime(latest["MonthEndingDate"])
+          month = date.strftime("%B %Y")
+          percentage = latest["PercentageWithin4HoursAll"]
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"month={month}\n")
+              f.write(f"percentage={percentage}\n")
+          PY
+
       - name: Email notification
         if: steps.data-changes.outputs.changed == 'true'
         uses: dawidd6/action-send-mail@v6
@@ -73,6 +93,8 @@ jobs:
           from: NHS Scotland A&E data updater
           body: |
             Public Health Scotland A&E data has changed.
+
+            Latest data: ${{ steps.latest-data.outputs.month }} — ${{ steps.latest-data.outputs.percentage }}% within four hours.
 
             The GitHub CSV has been updated and the Datawrapper chart has been republished.
 
