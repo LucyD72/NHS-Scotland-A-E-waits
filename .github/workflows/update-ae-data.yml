@@ -50,7 +50,7 @@ jobs:
           git push
 
       - name: Republish Datawrapper chart
-        if: steps.data-changes.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.data-changes.outputs.changed == 'true'
         env:
           DATAWRAPPER_API_TOKEN: ${{ secrets.DATAWRAPPER_API_TOKEN }}
         run: |
