@@ -58,3 +58,23 @@ jobs:
             --request POST \
             --url "https://api.datawrapper.de/v3/charts/eyGvs/publish" \
             --header "Authorization: Bearer $DATAWRAPPER_API_TOKEN"
+
+      - name: Email notification
+        if: steps.data-changes.outputs.changed == 'true'
+        uses: dawidd6/action-send-mail@v6
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.GMAIL_ADDRESS }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: NHS Scotland A&E data updated
+          to: ${{ secrets.GMAIL_ADDRESS }}
+          from: NHS Scotland A&E data updater
+          body: |
+            Public Health Scotland A&E data has changed.
+
+            The GitHub CSV has been updated and the Datawrapper chart has been republished.
+
+            Repository:
+            https://github.com/LucyD72/NHS-Scotland-A-E-waits
