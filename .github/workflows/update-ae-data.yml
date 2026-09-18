@@ -60,7 +60,7 @@ jobs:
             --header "Authorization: Bearer $DATAWRAPPER_API_TOKEN"
 
       - name: Email notification
-        if: steps.data-changes.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.data-changes.outputs.changed == 'true'
         uses: dawidd6/action-send-mail@v6
         with:
           server_address: smtp.gmail.com
